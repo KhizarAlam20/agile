@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+        }
+        .debug {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            white-space: pre-wrap;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            border-radius: 4px 4px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Admin Login</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('direct')">Direct API</div>
+            <div class="tab" onclick="switchTab('proxy')">Proxy API</div>
+            <div class="tab" onclick="switchTab('axios')">Axios</div>
+        </div>
+        
+        <div class="tab-content active" id="direct">
+            <h2>Test Direct API Call</h2>
+            <p>This tests a direct call to http://localhost:5000/api/auth/login</p>
+            <div class="form-group">
+                <label for="email-direct">Email:</label>
+                <input type="email" id="email-direct" value="admin@blogweb.com">
+            </div>
+            <div class="form-group">
+                <label for="password-direct">Password:</label>
+                <input type="password" id="password-direct" value="admin123">
+            </div>
+            <button onclick="testDirectLogin()">Test Direct Login</button>
+        </div>
+        
+        <div class="tab-content" id="proxy">
+            <h2>Test Proxy API Call</h2>
+            <p>This tests a call to /api/auth/login (relying on proxy)</p>
+            <div class="form-group">
+                <label for="email-proxy">Email:</label>
+                <input type="email" id="email-proxy" value="admin@blogweb.com">
+            </div>
+            <div class="form-group">
+                <label for="password-proxy">Password:</label>
+                <input type="password" id="password-proxy" value="admin123">
+            </div>
+            <button onclick="testProxyLogin()">Test Proxy Login</button>
+        </div>
+        
+        <div class="tab-content" id="axios">
+            <h2>Test with Axios</h2>
+            <p>This tests using axios library (similar to React app)</p>
+            <div class="form-group">
+                <label for="email-axios">Email:</label>
+                <input type="email" id="email-axios" value="admin@blogweb.com">
+            </div>
+            <div class="form-group">
+                <label for="password-axios">Password:</label>
+                <input type="password" id="password-axios" value="admin123">
+            </div>
+            <button onclick="testAxiosLogin()">Test Axios Login</button>
+        </div>
+        
+        <div class="result" id="result">Results will appear here...</div>
+        <div class="debug" id="debug">Debug information will appear here...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        function switchTab(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        function logDebug(message) {
+            const debugDiv = document.getElementById('debug');
+            const timestamp = new Date().toISOString();
+            debugDiv.innerHTML += `[${timestamp}] ${message}\n`;
+        }
+        
+        async function testDirectLogin() {
+            const email = document.getElementById('email-direct').value;
+            const password = document.getElementById('password-direct').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'Sending direct request...';
+            logDebug(`Testing direct login with email: ${email}`);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                logDebug(`Response status: ${response.status}`);
+                const data = await response.json();
+                logDebug(`Response received: ${JSON.stringify(data).substring(0, 100)}...`);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        Direct login successful!
+                        Status: ${response.status}
+                        
+                        Response data:
+                        ${JSON.stringify(data, null, 2)}
+                        
+                        Token: ${data.token.substring(0, 20)}...
+                        
+                        User:
+                        - Name: ${data.user.name}
+                        - Email: ${data.user.email}
+                        - Role: ${data.user.role}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        Direct login failed!
+                        Status: ${response.status}
+                        
+                        Error:
+                        ${JSON.stringify(data, null, 2)}
+                    `;
+                }
+            } catch (error) {
+                logDebug(`Error: ${error.message}`);
+                resultDiv.innerHTML = `
+                    Direct request error!
+                    
+                    ${error.message}
+                    
+                    Possible issues:
+                    1. Server not running on port 5000
+                    2. CORS issues - make sure your server allows cross-origin requests
+                    3. Network connectivity issues
+                `;
+            }
+        }
+        
+        async function testProxyLogin() {
+            const email = document.getElementById('email-proxy').value;
+            const password = document.getElementById('password-proxy').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'Sending proxy request...';
+            logDebug(`Testing proxy login with email: ${email}`);
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                logDebug(`Response status: ${response.status}`);
+                const data = await response.json();
+                logDebug(`Response received: ${JSON.stringify(data).substring(0, 100)}...`);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        Proxy login successful!
+                        Status: ${response.status}
+                        
+                        Response data:
+                        ${JSON.stringify(data, null, 2)}
+                        
+                        Token: ${data.token.substring(0, 20)}...
+                        
+                        User:
+                        - Name: ${data.user.name}
+                        - Email: ${data.user.email}
+                        - Role: ${data.user.role}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        Proxy login failed!
+                        Status: ${response.status}
+                        
+                        Error:
+                        ${JSON.stringify(data, null, 2)}
+                    `;
+                }
+            } catch (error) {
+                logDebug(`Error: ${error.message}`);
+                resultDiv.innerHTML = `
+                    Proxy request error!
+                    
+                    ${error.message}
+                    
+                    Possible issues:
+                    1. Proxy not configured correctly
+                    2. Server not running on port 5000
+                    3. Network connectivity issues
+                `;
+            }
+        }
+        
+        async function testAxiosLogin() {
+            const email = document.getElementById('email-axios').value;
+            const password = document.getElementById('password-axios').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = 'Sending axios request...';
+            logDebug(`Testing axios login with email: ${email}`);
+            
+            try {
+                // Create axios instance similar to the one in the React app
+                const api = axios.create({
+                    baseURL: '/api',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                // Also try direct URL as fallback
+                const directApi = axios.create({
+                    baseURL: 'http://localhost:5000/api',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                let response;
+                try {
+                    logDebug('Trying with proxy URL first...');
+                    response = await api.post('/auth/login', { email, password });
+                    logDebug('Proxy URL worked!');
+                } catch (proxyError) {
+                    logDebug(`Proxy URL failed: ${proxyError.message}`);
+                    logDebug('Trying with direct URL as fallback...');
+                    response = await directApi.post('/auth/login', { email, password });
+                    logDebug('Direct URL worked!');
+                }
+                
+                logDebug(`Response status: ${response.status}`);
+                const data = response.data;
+                logDebug(`Response received: ${JSON.stringify(data).substring(0, 100)}...`);
+                
+                resultDiv.innerHTML = `
+                    Axios login successful!
+                    Status: ${response.status}
+                    
+                    Response data:
+                    ${JSON.stringify(data, null, 2)}
+                    
+                    Token: ${data.token.substring(0, 20)}...
+                    
+                    User:
+                    - Name: ${data.user.name}
+                    - Email: ${data.user.email}
+                    - Role: ${data.user.role}
+                `;
+            } catch (error) {
+                logDebug(`Error: ${error.message}`);
+                let errorDetails = '';
+                
+                if (error.response) {
+                    errorDetails = `
+                        Status: ${error.response.status}
+                        Data: ${JSON.stringify(error.response.data, null, 2)}
+                    `;
+                    logDebug(`Response error: ${JSON.stringify(error.response.data)}`);
+                } else if (error.request) {
+                    errorDetails = 'No response received from server';
+                    logDebug('No response received from server');
+                } else {
+                    errorDetails = error.message;
+                }
+                
+                resultDiv.innerHTML = `
+                    Axios request error!
+                    
+                    ${errorDetails}
+                    
+                    Possible issues:
+                    1. Proxy not configured correctly
+                    2. Server not running on port 5000
+                    3. CORS issues
+                    4. Network connectivity issues
+                `;
+            }
+        }
+    </script>
+</body>
+</html> 
