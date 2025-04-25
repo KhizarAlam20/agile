@@ -10,7 +10,7 @@ A full-stack blog website with both admin and user functionality.
 - React Router DOM
 - Axios
 - React Hook Form
-- React Toastify
+- React Toastify Toasts!
 
 ### Backend
 - Node.js
